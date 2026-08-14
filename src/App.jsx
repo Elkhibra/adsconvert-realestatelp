@@ -16,7 +16,7 @@
    • Keeps: IBM Plex Sans Arabic (AR) + Inter (FR) professional fonts,
      full CRO layer (trust rows, kickers, sticky CTA, short form).
    • CRM SYNC: Live wiring via BroadcastChannel, localStorage queue, 
-     and fetch endpoint based on CRM schema.
+     fetch endpoint, and Supabase direct insertion.
    ================================================================== */
 
 import { useState, useEffect, useRef } from "react";
@@ -28,6 +28,12 @@ import {
   useSpring,
   useReducedMotion,
 } from "framer-motion";
+import { createClient } from "@supabase/supabase-js";
+
+/* ---------- Supabase Setup ---------- */
+const supabaseUrl = "https://qsunvaroiezxnnkpjxdf.supabase.co";
+const supabaseAnonKey = "sb_publishable_11yHNXEVdORiQuwGqdKmqg_W1rkrPP4";
+const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 /* ---------- Brand assets ---------- */
 const LOGO_URL =
@@ -781,7 +787,7 @@ export default function App() {
     if (element) element.scrollIntoView({ behavior: "smooth", block: "start" });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
     // Optional: Extract UTM params from URL to match the example payload
@@ -791,24 +797,28 @@ export default function App() {
       campaign: urlParams.get("utm_campaign") || "",
     };
 
+    const formattedPropertyType =
+      formData.propertyType === f.otherType && formData.propertyTypeOther
+        ? `${f.otherType}: ${formData.propertyTypeOther}`
+        : formData.propertyType;
+
+    const formattedGoal =
+      formData.goal === f.otherGoal && formData.goalOther
+        ? `${f.otherGoal}: ${formData.goalOther}`
+        : formData.goal;
+
     // AdsConvert.ma LP -> CRM sync
     const payload = {
       ...formData,
-      propertyType:
-        formData.propertyType === f.otherType && formData.propertyTypeOther
-          ? f.otherType + ": " + formData.propertyTypeOther
-          : formData.propertyType,
-      goal:
-        formData.goal === f.otherGoal && formData.goalOther
-          ? f.otherGoal + ": " + formData.goalOther
-          : formData.goal,
+      propertyType: formattedPropertyType,
+      goal: formattedGoal,
       language,
       submittedAt: new Date().toISOString(),
       __id: Date.now() + "-" + Math.random().toString(36).slice(2),
       ...(utm.source || utm.campaign ? { utm } : {}), // Append utm only if present in URL
     };
 
-    // Live sync (same browser - works today, no backend needed):
+    // 1. Live sync (same browser - works today, no backend needed):
     try {
       const q = JSON.parse(
         localStorage.getItem("adsconvert_webhook_queue") || "[]"
@@ -822,7 +832,28 @@ export default function App() {
         new BroadcastChannel("adsconvert_webhook").postMessage(payload);
     } catch (err) {}
 
-    // Real endpoint (when the backend is ready):
+    // 2. Save directly to your Supabase database
+    try {
+      const { error } = await supabase.from("leads").insert([
+        {
+          name: formData.name,
+          phone: formData.phone,
+          email: formData.email,
+          role: formData.role,
+          property_type: formattedPropertyType,
+          has_advertising: formData.hasAdvertising,
+          goal: formattedGoal,
+          language: language,
+          utm: utm.source || utm.campaign ? utm : null,
+          status: "New Lead",
+        },
+      ]);
+      if (error) console.error("Error saving to Supabase:", error);
+    } catch (err) {
+      console.error("Supabase request failed:", err);
+    }
+
+    // 3. Real endpoint (when the backend is ready):
     fetch("https://api.adsconvert.ma/v1/hooks/landing-form", {
       method: "POST",
       headers: {
