@@ -790,7 +790,11 @@ export default function App() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Optional: Extract UTM params from URL to match the example payload
+    // 1. Generate unique event ID for Meta deduplication
+    const eventId =
+      "lead_" + Date.now() + "_" + Math.random().toString(36).slice(2, 7);
+
+    // Extract UTM params if present in URL
     const urlParams = new URLSearchParams(window.location.search);
     const utm = {
       source: urlParams.get("utm_source") || "",
@@ -807,30 +811,15 @@ export default function App() {
         ? `${f.otherGoal}: ${formData.goalOther}`
         : formData.goal;
 
-    // AdsConvert.ma LP -> CRM sync
     const payload = {
       ...formData,
       propertyType: formattedPropertyType,
       goal: formattedGoal,
       language,
       submittedAt: new Date().toISOString(),
-      __id: Date.now() + "-" + Math.random().toString(36).slice(2),
-      ...(utm.source || utm.campaign ? { utm } : {}), // Append utm only if present in URL
+      __id: eventId,
+      ...(utm.source || utm.campaign ? { utm } : {}),
     };
-
-    // 1. Live sync (same browser - works today, no backend needed):
-    try {
-      const q = JSON.parse(
-        localStorage.getItem("adsconvert_webhook_queue") || "[]"
-      );
-      q.push(payload);
-      localStorage.setItem(
-        "adsconvert_webhook_queue",
-        JSON.stringify(q.slice(-20))
-      );
-      if (window.BroadcastChannel)
-        new BroadcastChannel("adsconvert_webhook").postMessage(payload);
-    } catch (err) {}
 
     // 2. Save directly to your Supabase database
     try {
@@ -853,15 +842,31 @@ export default function App() {
       console.error("Supabase request failed:", err);
     }
 
-    // 3. Real endpoint (when the backend is ready):
-    fetch("https://api.adsconvert.ma/v1/hooks/landing-form", {
+    // 3. Browser Pixel Event (with eventID for deduplication)
+    if (typeof window.fbq === "function") {
+      window.fbq(
+        "track",
+        "Lead",
+        {
+          content_name: "Real Estate Consultation",
+          status: formData.role,
+          content_category: formattedPropertyType,
+        },
+        { eventID: eventId }
+      );
+    }
+
+    // 4. Server-Side Conversions API (CAPI) Call
+    fetch("/api/meta-capi", {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "X-Source": "adsconvert-lp",
-      },
-      body: JSON.stringify(payload),
-    }).catch(() => {});
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        ...formData,
+        propertyType: formattedPropertyType,
+        eventId: eventId,
+        sourceUrl: window.location.href,
+      }),
+    }).catch((err) => console.error("CAPI trigger error:", err));
 
     setSubmitted(true);
     scrollToElement("form");
