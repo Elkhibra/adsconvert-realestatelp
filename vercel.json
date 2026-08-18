@@ -1,0 +1,12 @@
+{
+  "rewrites": [
+    {
+      "source": "/realestat-crm/:path*",
+      "destination": "https://adsconvert-crm.vercel.app/:path*"
+    },
+    {
+      "source": "/realestate-lp",
+      "destination": "/"
+    }
+  ]
+}
