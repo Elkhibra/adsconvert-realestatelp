@@ -146,8 +146,8 @@ const translations = {
     nav: { logo: "AdsConvert.ma", startNow: "ابدأ الآن" },
     hero: {
       subtitle: "Media Buying للقطاع العقاري",
-      mainHeadline1: "نحوّل ميزانيتك الإعلانية إلى زيارات حقيقية",
-      mainHeadline2: "لمشروعك العقاري",
+      mainHeadline1: "نحوّل ميزانيتك الإعلانية إلى فرص حقيقية لبيع",
+      mainHeadline2: "مشروعك العقاري",
       description:
         "من خلال استراتيجيات إعلانية مدروسة وحملات موجهة لتحقيق أهداف حقيقية. أساعد المطورين العقاريين والوكالات على جذب المشترين الجادين، بدل إنفاق الميزانية على استفسارات غير مؤهلة.",
       ctaConsultation: "ابدأ استشارة مجانية",
@@ -338,7 +338,7 @@ const translations = {
     hero: {
       subtitle: "Media Buying pour l'immobilier",
       mainHeadline1:
-        "Transformez votre budget publicitaire en véritables visites",
+        "Transformez votre budget publicitaire en véritables opportunités de vente",
       mainHeadline2: "pour votre projet immobilier",
       description:
         "Grâce à des stratégies publicitaires réfléchies et des campagnes ciblées pour atteindre des objectifs réels. J'aide les promoteurs immobiliers et les agences à attirer les vrais acheteurs, plutôt que de gaspiller le budget sur des demandes non qualifiées.",
@@ -549,6 +549,10 @@ const formCopy = {
     labelPropertyType: "2 - نوع العقار",
     labelAdvertising: "3 - هل سبق تشغيل إعلانات؟",
     labelGoal: "4 - ما هو هدفك الرئيسي؟",
+    labelInventory: "5 - كم عدد الوحدات المتاحة للبيع حالياً؟",
+    labelBudget:
+      "6 - ما هي ميزانية الإعلانات الشهرية التي أنت مستعد لاستثمارها؟",
+    labelUrgency: "7 - متى ترغب في البدء؟",
     roles: ["مطور عقاري", "وكالة عقارية", "صاحب مشروع أو مستثمر عقاري"],
     types: ["شقق", "فلل", "مشروع إقامة سكنية", "أراض", "عقارات أخرى"],
     otherType: "عقارات أخرى",
@@ -560,6 +564,20 @@ const formCopy = {
       "بيع الوحدات المتبقية",
       "إطلاق مشروع جديد",
       "شي آخر",
+    ],
+    inventoryOptions: ["1–5", "6–10", "11–20", "21–50", "50+"],
+    budgetOptions: [
+      "أقل من 5,000 درهم",
+      "5,000 – 10,000 درهم",
+      "10,000 – 20,000 درهم",
+      "20,000 – 50,000 درهم",
+      "50,000+ درهم",
+    ],
+    urgencyOptions: [
+      "الآن",
+      "خلال 2-4 أسابيع",
+      "خلال 1-3 أشهر",
+      "أبحث فقط عن معلومات.",
     ],
     otherGoal: "شي آخر",
     otherGoalPlaceholder: "يرجى تحديد هدفك",
@@ -586,6 +604,11 @@ const formCopy = {
     labelPropertyType: "2 - Type de propriété",
     labelAdvertising: "3 - Avez-vous déjà lancé des publicités?",
     labelGoal: "4 - Quel est votre objectif principal?",
+    labelInventory:
+      "5 - Combien d'unités sont actuellement disponibles à la vente ?",
+    labelBudget:
+      "6 - Quel budget publicitaire mensuel êtes-vous prêt à investir ?",
+    labelUrgency: "7 - Quand souhaitez-vous commencer ?",
     roles: [
       "Promoteur immobilier",
       "Agence immobilière",
@@ -607,6 +630,20 @@ const formCopy = {
       "Vendre les unités restantes",
       "Lancer un nouveau projet",
       "Autre",
+    ],
+    inventoryOptions: ["1–5", "6–10", "11–20", "21–50", "50+"],
+    budgetOptions: [
+      "Moins de 5 000 MAD",
+      "5 000 – 10 000 MAD",
+      "10 000 – 20 000 MAD",
+      "20 000 – 50 000 MAD",
+      "50 000+ MAD",
+    ],
+    urgencyOptions: [
+      "Dès maintenant",
+      "Dans les 2–4 semaines",
+      "Dans 1–3 mois",
+      "Je cherche simplement des informations.",
     ],
     otherGoal: "Autre",
     otherGoalPlaceholder: "Veuillez préciser votre objectif",
@@ -684,6 +721,9 @@ export default function App() {
     hasAdvertising: "",
     goal: "",
     goalOther: "",
+    inventory: "",
+    budget: "",
+    urgency: "",
     name: "",
     phone: "",
     email: "",
@@ -832,6 +872,9 @@ export default function App() {
           property_type: formattedPropertyType,
           has_advertising: formData.hasAdvertising,
           goal: formattedGoal,
+          inventory: formData.inventory,
+          budget: formData.budget,
+          urgency: formData.urgency,
           language: language,
           utm: utm.source || utm.campaign ? utm : null,
           status: "New Lead",
@@ -881,6 +924,9 @@ export default function App() {
       hasAdvertising: "",
       goal: "",
       goalOther: "",
+      inventory: "",
+      budget: "",
+      urgency: "",
       name: "",
       phone: "",
       email: "",
@@ -1665,6 +1711,78 @@ export default function App() {
                       }
                     />
                   )}
+
+                  {/* ---------- NEW FIELDS ---------- */}
+                  <div className="grid sm:grid-cols-2 gap-5">
+                    <div>
+                      <label className="block text-sm font-bold mb-2 text-[#0D0D0F]">
+                        {f.labelInventory}{" "}
+                        <span className="text-[#FD1843]">*</span>
+                      </label>
+                      <select
+                        required
+                        className={fieldCls}
+                        value={formData.inventory}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            inventory: e.target.value,
+                          })
+                        }
+                      >
+                        <option value="">{f.choose}</option>
+                        {f.inventoryOptions.map((opt) => (
+                          <option key={opt} value={opt}>
+                            {opt}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-bold mb-2 text-[#0D0D0F]">
+                        {f.labelBudget}{" "}
+                        <span className="text-[#FD1843]">*</span>
+                      </label>
+                      <select
+                        required
+                        className={fieldCls}
+                        value={formData.budget}
+                        onChange={(e) =>
+                          setFormData({ ...formData, budget: e.target.value })
+                        }
+                      >
+                        <option value="">{f.choose}</option>
+                        {f.budgetOptions.map((opt) => (
+                          <option key={opt} value={opt}>
+                            {opt}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-bold mb-2 text-[#0D0D0F]">
+                      {f.labelUrgency} <span className="text-[#FD1843]">*</span>
+                    </label>
+                    <select
+                      required
+                      className={fieldCls}
+                      value={formData.urgency}
+                      onChange={(e) =>
+                        setFormData({ ...formData, urgency: e.target.value })
+                      }
+                    >
+                      <option value="">{f.choose}</option>
+                      {f.urgencyOptions.map((opt) => (
+                        <option key={opt} value={opt}>
+                          {opt}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  {/* --------------------------------- */}
 
                   <div className="grid sm:grid-cols-2 gap-5">
                     <input
