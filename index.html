@@ -37,7 +37,7 @@
       );
 
       // Initialize with your Dataset / Pixel ID
-      fbq("init", "1593762288808919");
+      fbq("init", "%VITE_META_PIXEL_ID%");
       fbq("track", "PageView");
     </script>
     <noscript>
@@ -45,7 +45,7 @@
         height="1"
         width="1"
         style="display: none"
-        src="https://www.facebook.com/tr?id=YOUR_META_DATASET_ID_HERE&ev=PageView&noscript=1"
+        src="https://www.facebook.com/tr?id=%VITE_META_PIXEL_ID%&ev=PageView&noscript=1"
       />
     </noscript>
     <!-- End Meta Pixel Code -->
