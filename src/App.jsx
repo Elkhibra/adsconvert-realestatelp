@@ -29,6 +29,7 @@ import {
   useReducedMotion,
 } from "framer-motion";
 import { createClient } from "@supabase/supabase-js";
+import { Link } from "react-router-dom";
 
 /* ---------- Supabase Setup ---------- */
 const supabaseUrl = "https://qsunvaroiezxnnkpjxdf.supabase.co";
@@ -327,7 +328,12 @@ const translations = {
         "تحسين الأداء",
       ],
       companyTitle: "الشركة",
-      companyList: ["عن", "المدونة", "سياسة الخصوصية", "شروط الاستخدام"],
+      companyList: [
+        { label: "عن", link: "#apropos" },
+        { label: "المدونة", link: "#blog" },
+        { label: "سياسة الخصوصية", link: "/privacy" },
+        { label: "شروط الاستخدام", link: "#conditions" },
+      ],
       emailLabel: "البريد الإلكتروني:",
       siteLabel: "الموقع:",
       processLink: "كيف نعمل",
@@ -527,10 +533,10 @@ const translations = {
       ],
       companyTitle: "Entreprise",
       companyList: [
-        "À propos",
-        "Blog",
-        "Politique de confidentialité",
-        "Conditions d'utilisation",
+        { label: "À propos", link: "#apropos" },
+        { label: "Blog", link: "#blog" },
+        { label: "Politique de confidentialité", link: "/privacy" },
+        { label: "Conditions d'utilisation", link: "#conditions" },
       ],
       emailLabel: "Email:",
       siteLabel: "Site:",
@@ -759,7 +765,7 @@ export default function App() {
   const yWatermark = useTransform(
     ctaProgress,
     [0, 1],
-    [reduce ? 0 : 70, reduce ? 0 : -70]
+    [reduce ? 0 : 70, reduce ? 0 : -70],
   );
 
   useEffect(() => {
@@ -895,7 +901,7 @@ export default function App() {
           status: formData.role,
           content_category: formattedPropertyType,
         },
-        { eventID: eventId }
+        { eventID: eventId },
       );
     }
 
@@ -1933,10 +1939,10 @@ export default function App() {
               <ul className="space-y-2 text-sm text-[#7A7A7A]">
                 {t.footer.companyList.map((c) => (
                   <li
-                    key={c}
+                    key={c.label}
                     className="hover:text-[#FD1843] transition cursor-pointer"
                   >
-                    {c}
+                    <Link to={c.link}>{c.label}</Link>
                   </li>
                 ))}
               </ul>
